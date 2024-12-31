@@ -1,8 +1,9 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { useChat } from '../contexts/ChatContext';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
+import axios from 'axios';
 
 
 export default function DirectMessageModal({ isOpen, onClose, users }) {
@@ -12,28 +13,27 @@ export default function DirectMessageModal({ isOpen, onClose, users }) {
   const [user, setUsers] = useState([{}]);
 
 
-  // useEffect(() => {
-  //   const fetchUsers = async () => {
-  //     try {
-  //       const token = localStorage.getItem('token');
-  //       const response = await axios.get('http://localhost:3000/api/users', {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`
-  //         }
-  //       });
-  //       // setUsers(response.data);
-  //       console.log('Fetched users:', response.data);
-  //       setUsers(response.data.users.filter((user, index, self) =>
-  //         index === self.findIndex((u) => u._id === user._id)
-  //       ));
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('http://localhost:3000/api/users/users', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        // setUsers(response.data);
+        console.log('Fetched users:', response.data);
+        setUsers(response.data)
         
-  //     } catch (error) {
-  //       console.error('Error fetching users:', error);
-  //     }
-  //   };
-  //   fetchUsers();
-  // }, []);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+    fetchUsers();
+  }, []);
 
+  console.log("users",users)
   // const mockUsers = [
   //   { id: 1, name: 'John Doe', status: 'online' },
   //   { id: 2, name: 'Jane Smith', status: 'offline' },
@@ -44,7 +44,7 @@ export default function DirectMessageModal({ isOpen, onClose, users }) {
   // const filteredUsers = mockUsers?.filter(user =>
   //   user.name.toLowerCase().includes(search.toLowerCase())
   // );
-  console.log("usehgdhkgcfr",users)
+  // console.log("usehgdhkgcfr",users)
   
 
   // useEffect(() => {
@@ -115,7 +115,7 @@ export default function DirectMessageModal({ isOpen, onClose, users }) {
                 </div>
 
                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {users.map(user => (
+                  {user.map(user => (
                     <button
                       key={user._id}
                       onClick={() => startChat(user)}

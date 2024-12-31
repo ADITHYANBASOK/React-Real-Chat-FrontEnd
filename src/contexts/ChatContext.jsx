@@ -14,27 +14,18 @@ const initialState = {
 
 function chatReducer(state, action) {
   switch (action.type) {
-    case 'SET_MESSAGES':
+    case "SET_MESSAGES":
       return { ...state, messages: action.payload };
-    case 'ADD_MESSAGE':
+    case "ADD_MESSAGE":
       return { ...state, messages: [...state.messages, action.payload] };
-    case 'SET_ACTIVE_CHAT':
+    case "SET_ACTIVE_CHAT":
       return { ...state, activeChat: action.payload };
-    case 'SET_ONLINE_USERS':
-      return { ...state, onlineUsers: action.payload };
-    case 'SET_TYPING':
+    case "SET_TYPING":
       return { ...state, typingUsers: [...state.typingUsers, action.payload] };
-    case 'STOP_TYPING':
+    case "STOP_TYPING":
       return {
         ...state,
         typingUsers: state.typingUsers.filter((id) => id !== action.payload),
-      };
-    case 'CREATE_GROUP':
-      return { ...state, chats: [...state.chats, action.payload] };
-    case 'CREATE_DIRECT_CHAT':
-      return {
-        ...state,
-        chats: [...state.chats, { ...action.payload, type: 'direct' }],
       };
     default:
       return state;
@@ -44,34 +35,30 @@ function chatReducer(state, action) {
 export function ChatProvider({ children }) {
   const [state, dispatch] = useReducer(chatReducer, initialState);
   const { user } = useAuth();
-  const socket = io('http://localhost:3000'); // Replace with your server URL
+  const socket = io('http://localhost:3000', {
+    auth: { token: localStorage.getItem('token') },
+  });
 
   useEffect(() => {
     if (user) {
-      // Notify server of user login and join chat rooms
-      socket.emit('login', user.id);
+      socket.emit("setup", user);
 
-      // Handle receiving a new message
-      socket.on('message', (message) => {
+      // Listen for new messages
+      socket.on("message received", (message) => {
         if (message.chatId === state.activeChat?._id) {
-          dispatch({ type: 'ADD_MESSAGE', payload: message });
+          dispatch({ type: "ADD_MESSAGE", payload: message });
         }
       });
 
-      // Other events
-      socket.on('typing', (userId) => {
-        dispatch({ type: 'SET_TYPING', payload: userId });
+      // Typing event listeners
+      socket.on("typing", (userId) => {
+        dispatch({ type: "SET_TYPING", payload: userId });
       });
 
-      socket.on('stop_typing', (userId) => {
-        dispatch({ type: 'STOP_TYPING', payload: userId });
+      socket.on("stop typing", (userId) => {
+        dispatch({ type: "STOP_TYPING", payload: userId });
       });
 
-      socket.on('online_users', (users) => {
-        dispatch({ type: 'SET_ONLINE_USERS', payload: users });
-      });
-
-      // Cleanup on component unmount
       return () => {
         socket.disconnect();
       };
@@ -93,7 +80,9 @@ export function ChatProvider({ children }) {
       if (!response.ok) throw new Error('Failed to send message');
 
       const message = await response.json();
-      socket.emit('send_message', message); // Emit message to the room
+
+      // Emit the message via Socket.IO
+      socket.emit("new message", messageData);
     } catch (error) {
       console.error('Error sending message:', error);
     }

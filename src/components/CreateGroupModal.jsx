@@ -164,16 +164,17 @@ export default function CreateGroupModal({ isOpen, onClose }) {
     const fetchUsers = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:3000/api/users', {
+        const response = await axios.get('http://localhost:3000/api/users/users', {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
         // setUsers(response.data);
-        console.log('Fetched users:', response.data);
-        setUsers(response.data.users.filter((user, index, self) =>
-          index === self.findIndex((u) => u._id === user._id)
-        ));
+        console.log('Fetched users1:', response.data);
+        // setUsers(response.data.users.filter((user, index, self) =>
+        //   index === self.findIndex((u) => u._id !== user._id)
+        // ));
+        setUsers(response.data)
         
       } catch (error) {
         console.error('Error fetching users:', error);

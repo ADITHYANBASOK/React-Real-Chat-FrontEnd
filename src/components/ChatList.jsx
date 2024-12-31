@@ -15,17 +15,17 @@ export default function ChatList() {
     const fetchUsers = async () => {
       try {
         const token = localStorage.getItem('token'); // Get token from storage
-        const response = await axios.get('http://localhost:3000/api/users', {
+        const response = await axios.get('http://localhost:3000/api/users/users', {
           headers: {
             Authorization: `Bearer ${token}`, // Attach token to request headers
           },
         });
         console.log('Full API Response:', response.data);
-        const uniqueUsers = response.data.users?.filter((user, index, self) =>
-          index === self.findIndex((u) => u._id === user._id)
-        ) || [];
+        // const uniqueUsers = response.data.users?.filter((user, index, self) =>
+        //   index === self.findIndex((u) => u._id === user._id)
+        // ) || [];
         console.log('Unique Users:', uniqueUsers);
-        setUsers(uniqueUsers); // Update state with unique users
+        setUsers(response.data); // Update state with unique users
       } catch (error) {
         console.error('Error fetching users:', error);
       }

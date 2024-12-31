@@ -1,33 +1,46 @@
 import { useEffect, useState } from 'react';
 import { useChat } from '../contexts/ChatContext';
+import { jwtDecode } from 'jwt-decode';
 
 export default function ChatWindow() {
   const [message, setMessage] = useState('');
   const { activeChat, messages, sendMessage, dispatch } = useChat();
   const token = localStorage.getItem('token');
 
+  const decodedToken = jwtDecode(token); // Decode the token
+  console.log('Decoded Token:', decodedToken);
+  
+  const userId = decodedToken.userId; // Extract the userId
+  console.log('User ID:', userId);
+
   // Fetch messages when the active chat changes
   useEffect(() => {
-    const fetchMessages = async () => {
-      if (activeChat) {
+    if (activeChat) {
+      const fetchMessages = async () => {
         try {
+          console.log("activeChat",activeChat)
           const response = await fetch(
             `http://localhost:3000/api/messages/${activeChat._id}`,
             {
-              headers: { Authorization: `Bearer ${token}` },
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+              },
             }
           );
+  
           if (!response.ok) throw new Error('Failed to fetch messages');
+  
           const data = await response.json();
+          console.log("data",data)
           dispatch({ type: 'SET_MESSAGES', payload: data });
         } catch (error) {
           console.error('Error fetching messages:', error);
         }
-      }
-    };
-
-    fetchMessages();
-  }, [activeChat, token, dispatch]);
+      };
+  
+      fetchMessages();
+    }
+  }, [activeChat, dispatch]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -64,19 +77,19 @@ export default function ChatWindow() {
           <div
             key={index}
             className={`flex ${
-              msg.sender === 'me' ? 'justify-end' : 'justify-start'
+              msg.sender._id === userId ? 'justify-end' : 'justify-start'
             }`}
           >
             <div
               className={`max-w-xs px-4 py-2 rounded-lg ${
-                msg.sender === 'me'
+                msg.sender._id === userId
                   ? 'bg-primary text-white'
                   : 'bg-gray-100 dark:bg-gray-700'
               }`}
             >
               <p>{msg.content}</p>
               <p className="text-xs mt-1 opacity-70">
-                {new Date(msg.timestamp).toLocaleTimeString()}
+                {new Date(msg.createdAt).toLocaleTimeString()}
               </p>
             </div>
           </div>
